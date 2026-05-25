@@ -2,7 +2,7 @@ export class Service {
   private apiUrl = import.meta.env.VITE_API_URL;;
 
   protected async fetch<T>(path: string = '', init?: RequestInit): Promise<T> {
-    const response = await fetch(`${this.apiUrl}${path}`, init);
+    const response = await fetch(`${this.apiUrl}/${path}`, init);
 
     if (response.status === 204) return undefined as unknown as T;
 
