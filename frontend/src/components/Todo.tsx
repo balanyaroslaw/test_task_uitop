@@ -46,7 +46,7 @@ function Todo({ todo, onDelete, onUpdate, category }: TodoProps) {
         <div className="flex-1 px-3.5 py-3">
           <h3
             className={`
-              text-[10px] leading-relaxed tracking-tight mb-1.5
+              text-[18px] leading-relaxed tracking-tight mb-1.5
               ${todo.completed ? "line-through decoration-black" : ""}
             `}
           >
