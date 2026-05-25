@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Category {
+  id    Int      @id @default(autoincrement())
+  name  String @unique
+  todos Todo[]
+}
+
+model Todo {
+  id         String   @id @default(uuid())
+  text       String
+  status     Boolean  @default(false)
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+}
