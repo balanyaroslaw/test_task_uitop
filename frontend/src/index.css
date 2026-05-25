@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css?family=Pixelify Sans');
+
+@theme {
+  --font-pixel: 'Pixelify Sans', sans-serif;
+}

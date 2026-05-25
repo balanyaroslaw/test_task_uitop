@@ -44,8 +44,8 @@ export class TodosService {
   async create(todo: CreateTodoDto) {
     try {
       const countOfCategories = await this.todosRepository.getCountOfTodosByCategory(todo.categoryId);
-      if (countOfCategories >= 10) {
-        throw new HttpException("Cannot create more than 10 todos in a category", HttpStatus.BAD_REQUEST);
+      if (countOfCategories === 5) {
+        throw new HttpException("Cannot create more than 5 todos in a category", HttpStatus.BAD_REQUEST);
       }
       return await this.todosRepository.create(todo.text, todo.categoryId, todo.status);
     } catch (error) {
