@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
 import type { GetCategoryDTO } from "../dto/category.dto";
 import type { CreateTodoDTO } from "../dto/todo.dto";
 import CategoryDropdown from "./CategoryDropdown.tsx";
@@ -10,29 +11,37 @@ interface CreateTodoModalProps {
   onCreate: (dto: CreateTodoDTO) => Promise<void>;
 }
 
+interface FormValues {
+  text: string;
+  categoryId: string;
+}
+
 function CreateTodoModal({ isOpen, categories, onClose, onCreate }: CreateTodoModalProps) {
-  const [text, setText] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
+    defaultValues: { text: "", categoryId: "" },
+  });
+
+  useEffect(() => {
+    if (!isOpen) reset();
+  }, [isOpen, reset]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = async () => {
-    if (!text.trim() || !categoryId) return;
-    setLoading(true);
-    setError("");
+  const onSubmit = async (data: FormValues) => {
     try {
-      await onCreate({ text: text.trim(), categoryId: Number(categoryId), status: false });
-      setText("");
-      setCategoryId("");
+      await onCreate({ text: data.text.trim(), categoryId: Number(data.categoryId), status: false });
+      reset();
       onClose();
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to create task";
-      setError(message);
-      console.error("Failed to create todo:", e);
-    } finally {
-      setLoading(false);
+      setError("root", { message });
     }
   };
 
@@ -58,13 +67,14 @@ function CreateTodoModal({ isOpen, categories, onClose, onCreate }: CreateTodoMo
           <div className="flex flex-col gap-1.5">
             <label className="font-pixel text-[14px] text-gray-500 tracking-wide">task *</label>
             <input
+              {...register("text", {
+                required: "Task is required",
+                maxLength: { value: 80, message: "Max 80 characters" },
+              })}
               type="text"
-              value={text}
-              onChange={e => setText(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleSubmit()}
               placeholder="What needs to be done?"
-              maxLength={80}
               autoFocus
+              onKeyDown={e => e.key === "Enter" && handleSubmit(onSubmit)()}
               className="
                 font-vt323 text-lg px-3 py-2
                 bg-gray-50 border-2 border-black
@@ -73,17 +83,27 @@ function CreateTodoModal({ isOpen, categories, onClose, onCreate }: CreateTodoMo
                 transition-shadow duration-100
               "
             />
+            {errors.text && (
+              <span className="font-pixel text-[11px] text-red-600">{errors.text.message}</span>
+            )}
           </div>
 
-          <CategoryDropdown
-            categories={categories}
-            value={categoryId}
-            onChange={setCategoryId}
+          <Controller
+            name="categoryId"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => (
+              <CategoryDropdown
+                categories={categories}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
 
-          {error && (
+          {errors.root && (
             <div className="border-2 border-red-500 bg-red-50 px-3 py-2 text-[12px] font-pixel text-red-700">
-              {error}
+              {errors.root.message}
             </div>
           )}
         </div>
@@ -103,8 +123,8 @@ function CreateTodoModal({ isOpen, categories, onClose, onCreate }: CreateTodoMo
             ✕ cancel
           </button>
           <button
-            onClick={handleSubmit}
-            disabled={!text.trim() || loading}
+            onClick={handleSubmit(onSubmit)}
+            disabled={isSubmitting}
             className="
               flex-[2] font-pixel text-[14px] py-3
               bg-black text-white
@@ -115,7 +135,7 @@ function CreateTodoModal({ isOpen, categories, onClose, onCreate }: CreateTodoMo
               transition-all duration-100
             "
           >
-            {loading ? "..." : "＋ create"}
+            {isSubmitting ? "..." : "＋ create"}
           </button>
         </div>
       </div>
